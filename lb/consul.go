@@ -107,10 +107,6 @@ func (c *Consul) RegisterService(service, serviceUUID string) {
 
 func (c *Consul) getIP() (string, error) {
 
-	if dev {
-		return "10.16.3.177", nil
-	}
-
 	ifaces, err := net.Interfaces()
 
 	if err != nil {
