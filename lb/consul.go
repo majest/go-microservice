@@ -21,6 +21,7 @@ type Consul struct {
 }
 
 var dev bool
+var port int = 8080
 
 func (c *Consul) Init(devenv bool) {
 	dev = devenv
@@ -89,11 +90,11 @@ func (c *Consul) RegisterService(service, serviceUUID string) {
 		panic(err.Error())
 	}
 
-	fmt.Println("Local ip address: " + localIP)
+	fmt.Printf("Local ip address: %s:%v\n", localIP, port)
 	err = c.client.Agent().ServiceRegister(&api.AgentServiceRegistration{
 		ID:      c.UUID,
 		Name:    service,
-		Port:    8080,
+		Port:    port,
 		Address: localIP,
 	})
 
@@ -105,6 +106,11 @@ func (c *Consul) RegisterService(service, serviceUUID string) {
 }
 
 func (c *Consul) getIP() (string, error) {
+
+	if dev {
+		return "10.16.3.177", nil
+	}
+
 	ifaces, err := net.Interfaces()
 
 	if err != nil {
