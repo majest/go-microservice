@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
-	service "github.com/majest/go-service-test/service"
+	service "github.com/majest/go-microservice/service"
 	"golang.org/x/net/context"
 )
 

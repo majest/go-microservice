@@ -2,8 +2,8 @@ package server
 
 import (
 	httptransport "github.com/go-kit/kit/transport/http"
-	"github.com/majest/go-service-test/service"
-	"github.com/majest/go-service-test/transport"
+	"github.com/majest/go-microservice/service"
+	"github.com/majest/go-microservice/transport"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 )
