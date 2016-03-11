@@ -20,11 +20,12 @@ type Consul struct {
 	UUID        string
 }
 
-var dev bool
+var dev string
 var port int = 8080
 
-func (c *Consul) Init(devenv bool) {
-	dev = devenv
+func (c *Consul) Init() {
+
+	dev = os.Getenv("CONSUL_DEV")
 	c.CreateClient()
 	c.HandleExit()
 }
@@ -44,7 +45,8 @@ func (c *Consul) CreateConfig() *api.Config {
 }
 
 func (c *Consul) getNodeIP() (string, error) {
-	if dev {
+
+	if dev == "docker-local" || dev == "local" {
 		return "192.168.99.101", nil
 	}
 
@@ -106,6 +108,10 @@ func (c *Consul) RegisterService(service, serviceUUID string) {
 }
 
 func (c *Consul) getIP() (string, error) {
+
+	if dev == "local" {
+		return "127.0.0.1", nil
+	}
 
 	ifaces, err := net.Interfaces()
 

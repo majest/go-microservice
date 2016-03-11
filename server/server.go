@@ -1,17 +1,56 @@
 package server
 
 import (
-	httptransport "github.com/go-kit/kit/transport/http"
-	"github.com/majest/go-microservice/service"
-	"github.com/majest/go-microservice/transport"
-	"golang.org/x/net/context"
+	"net"
+
+	"github.com/majest/go-microservice/lb"
+	"github.com/satori/go.uuid"
+
+	"google.golang.org/grpc"
 )
 
-func CreateServer(svc service.Service) *httptransport.Server {
-	return httptransport.NewServer(
-		context.Background(),
-		transport.MakeEndpoint(svc),
-		transport.DecodeRequest,
-		transport.EncodeResponse,
-	)
+type Config struct {
+	Name        string
+	Description string
+}
+
+type Server struct {
+	c         *Config
+	ln        net.Listener
+	transport *grpc.Server
+}
+
+func Init(c *Config) *Server {
+	s := &Server{
+		c: c,
+	}
+	s.Init()
+	return s
+}
+
+func (s *Server) RegisterWithLb() {
+	loadbalancer := lb.Consul{}
+	loadbalancer.Init()
+	loadbalancer.RegisterService(s.c.Name, uuid.NewV4().String())
+}
+
+func (s *Server) Init() {
+	ln, err := net.Listen("tcp", ":9090")
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	s.ln = ln
+
+	s.transport = grpc.NewServer() // uses its own, internal context
+
+}
+
+func (s *Server) Transport() *grpc.Server {
+	return s.transport
+}
+
+func (s *Server) Run() {
+	s.transport.Serve(s.ln)
 }
