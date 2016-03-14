@@ -1,4 +1,4 @@
-package lb
+package consul
 
 import (
 	"errors"
@@ -12,19 +12,32 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/hashicorp/consul/api"
+	"github.com/satori/go.uuid"
 )
 
 type Consul struct {
-	client      *api.Client
+	Client      *api.Client
 	serviceName string
 	UUID        string
 }
 
 var dev string
-var port int = 8080
+var port int = 9090
+
+func RegisterService(serviceName string) *Consul {
+	c := &Consul{}
+	c.Init()
+	c.RegisterService(serviceName, uuid.NewV4().String())
+	return c
+}
+
+func New() *Consul {
+	c := &Consul{}
+	c.Init()
+	return c
+}
 
 func (c *Consul) Init() {
-
 	dev = os.Getenv("CONSUL_DEV")
 	c.CreateClient()
 	c.HandleExit()
@@ -61,11 +74,11 @@ func (c *Consul) HandleExit() {
 		sig := <-signalChannel
 		switch sig {
 		case os.Interrupt:
-			c.client.Agent().ServiceDeregister(c.UUID)
+			c.Client.Agent().ServiceDeregister(c.UUID)
 			fmt.Println("Deregistering service: " + c.serviceName + ":" + c.UUID)
 			os.Exit(0)
 		case syscall.SIGTERM:
-			c.client.Agent().ServiceDeregister(c.UUID)
+			c.Client.Agent().ServiceDeregister(c.UUID)
 			fmt.Println("Deregistering service: " + c.serviceName + ":" + c.UUID)
 			os.Exit(0)
 		}
@@ -78,7 +91,7 @@ func (c *Consul) CreateClient() {
 		fmt.Println("Error:" + errc.Error())
 		panic(errc.Error())
 	}
-	c.client = client
+	c.Client = client
 }
 
 func (c *Consul) RegisterService(service, serviceUUID string) {
@@ -93,7 +106,7 @@ func (c *Consul) RegisterService(service, serviceUUID string) {
 	}
 
 	fmt.Printf("Local ip address: %s:%v\n", localIP, port)
-	err = c.client.Agent().ServiceRegister(&api.AgentServiceRegistration{
+	err = c.Client.Agent().ServiceRegister(&api.AgentServiceRegistration{
 		ID:      c.UUID,
 		Name:    service,
 		Port:    port,
